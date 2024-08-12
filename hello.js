@@ -2,6 +2,40 @@ const express = require("express");
 const morgan = require("morgan");
 const app = express();
 
+const COUNTRY_DATA = [
+  {
+    path: "/english",
+    flag: "/images/flag-of-United-States-of-America.png",
+    alt: "US Flag",
+    title: "Go to US English Site",
+  },
+  {
+    path: "/french",
+    flag: "/images/flag-of-France.png",
+    alt: "Drapeau de la france",
+    title: "Aller sur le site français",
+  },
+  {
+    path: "/spanish",
+    flag: "/images/flag-of-Spain.png",
+    alt: "Bandera Española",
+    title: "Ir al sitio en Español",
+  },
+  {
+    path: "/serbian",
+    flag: "/images/flag-of-Serbia.png",
+    alt: "Застава Србије",
+    title: "Идите на српски сајт",
+  },
+]
+
+const LANGUAGE_CODES = {
+  english: "en-US",
+  french: "fr-FR",
+  spanish: "es-ES",
+  serbian: "sr-Cryl-rs",
+};
+
 app.set("views", "./views");
 app.set("view engine", "pug");
 
@@ -16,33 +50,25 @@ app.get("/", (req, res) => {
   res.redirect("/english");
 });
 
-app.get("/english", (req, res) => {
-  res.render("hello-world-english", {
-    currentPath: req.path,
-    language: "en-US",
-  });
+app.get("/:language", (req, res, next) => {
+  const language = req.params.language;
+  const languageCode = LANGUAGE_CODES[language];
+  console.log(languageCode);
+  if (!languageCode) {
+    next(new Error(`Language not supported: ${language}`));
+  } else {
+    res.render(`hello-world-${language}`, {
+      countries: COUNTRY_DATA,
+      currentPath: req.path,
+      language: LANGUAGE_CODES.language,
+    });
+  }
 });
 
-app.get("/french", (req, res) => {
-  res.render("hello-world-french", {
-    currentPath: req.path,
-    language: "fr-FR",
-  });
-});
-
-app.get("/serbian", (req, res) => {
-  res.render("hello-world-serbian", {
-    currentPath: req.path,
-    language: "sr-Cyrl-rs",
-  });
-});
-
-app.get("/spanish", (req, res) => {
-  res.render("hello-world-spanish", {
-    currentPath: req.path,
-    language: "es-ES",
-  });
-});
+app.use((err, req, res, _next) => {
+  console.log(err);
+  res.status(404).send(err.message);
+})
 
 app.listen(3000, "localhost", () => {
   console.log("Listening on port 3000.");
